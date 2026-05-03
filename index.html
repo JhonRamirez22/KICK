@@ -173,40 +173,24 @@
                 }
             }
             
-            async getViewerTokens(count) {
+async getViewerTokens(count) {
                 try {
-                    this.log(`Obteniendo ${count} tokens...`, 'info');
-                    const tokens = [];
+                    this.log(`Obteniendo ${count} tokens via Vercel API...`, 'info');
                     
-                    // Simplified token endpoint (browser-compatible)
-                    for (let i = 0; i < count; i++) {
-                        try {
-                            const response = await this.fetchWithUA('https://websockets.kick.com/viewer/v1/token', {
-                                method: 'GET',
-                                headers: {
-                                    'X-Client-Token': 'e1393935a959b4020a4491574f6490129f678acdaa92760471263db43487f823',
-                                    'X-Device-ID': crypto.randomUUID(),
-                                    'X-Session-ID': crypto.randomUUID()
-                                }
-                            });
-                            const data = await response.json();
-                            const token = data.data?.token;
-                            if (token && token.length > 20) {
-                                tokens.push(token);
-                                if (tokens.length % 50 === 0) this.log(`📥 ${tokens.length}/${count} tokens`, 'info');
-                            }
-                        } catch (e) {
-                            // Rate limit handling
-                            await new Promise(r => setTimeout(r, 1000));
-                        }
+                    const response = await fetch(`/api/tokens?channel=${this.channelName}&count=${count}`);
+                    const data = await response.json();
+                    
+                    if (data.tokens && data.tokens.length > 0) {
+                        this.tokenPool.push(...data.tokens);
+                        this.state.tokens = data.tokens.length;
+                        this.log(`✅ ${data.tokens.length}/${count} tokens obtenidos`, 'success');
+                        return true;
+                    } else {
+                        this.log('❌ No se obtuvieron tokens', 'error');
+                        return false;
                     }
-                    
-                    this.tokenPool.push(...tokens);
-                    this.state.tokens = tokens.length;
-                    this.log(`✅ ${tokens.length} tokens válidos`, 'success');
-                    return tokens.length > 0;
                 } catch (e) {
-                    this.log(`❌ Error tokens: ${e.message}`, 'error');
+                    this.log(`❌ Error API tokens: ${e.message}`, 'error');
                     return false;
                 }
             }
