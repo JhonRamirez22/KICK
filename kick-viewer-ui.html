@@ -172,16 +172,9 @@
                     // Simplified token endpoint (browser-compatible)
                     for (let i = 0; i < count; i++) {
                         try {
-                            const response = await this.fetchWithUA('https://websockets.kick.com/viewer/v1/token', {
-                                method: 'GET',
-                                headers: {
-                                    'X-Client-Token': 'e1393935a959b4020a4491574f6490129f678acdaa92760471263db43487f823',
-'X-Device-ID': (crypto.randomUUID?.() || (() => { return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) { const r = Math.random() * 16 | 0; const v = c == "x" ? r : (r & 0x3 | 0x8); return v.toString(16); }); })()),
-                'X-Session-ID': (crypto.randomUUID?.() || (() => { return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) { const r = Math.random() * 16 | 0; const v = c == "x" ? r : (r & 0x3 | 0x8); return v.toString(16); }); })())
-                                }
-                            });
-                            const data = await response.json();
-                            const token = data.data?.token;
+                            const apiResponse = await fetch(`/api/tokens?channel=${this.channelName}&count=1`);
+                            const apiData = await apiResponse.json();
+                            const token = apiData.tokens?.[0];
                             if (token && token.length > 20) {
                                 tokens.push(token);
                                 if (tokens.length % 50 === 0) this.log(`📥 ${tokens.length}/${count} tokens`, 'info');
