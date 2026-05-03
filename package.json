@@ -5,6 +5,7 @@
   "main": "kick-websocket.js",
   "scripts": {
     "start": "node kick-websocket.js",
+    "vercel-build": "echo 'Static site ready'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
