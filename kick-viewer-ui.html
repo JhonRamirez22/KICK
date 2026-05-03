@@ -172,9 +172,16 @@
                     // Simplified token endpoint (browser-compatible)
                     for (let i = 0; i < count; i++) {
                         try {
-                            const apiResponse = await fetch(`/api/tokens?channel=${this.channelName}&count=1`);
-                            const apiData = await apiResponse.json();
-                            const token = apiData.tokens?.[0];
+                            const response = await this.fetchWithUA('https://websockets.kick.com/viewer/v1/token', {
+                                method: 'GET',
+                                headers: {
+                                    'X-Client-Token': 'e1393935a959b4020a4491574f6490129f678acdaa92760471263db43487f823',
+                                    'X-Device-ID': crypto.randomUUID(),
+                                    'X-Session-ID': crypto.randomUUID()
+                                }
+                            });
+                            const data = await response.json();
+                            const token = data.data?.token;
                             if (token && token.length > 20) {
                                 tokens.push(token);
                                 if (tokens.length % 50 === 0) this.log(`📥 ${tokens.length}/${count} tokens`, 'info');
