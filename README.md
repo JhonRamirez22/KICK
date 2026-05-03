@@ -67,3 +67,4 @@ node kick-websocket.js https://kick.com/coscu 800
 
 Este proyecto es una **prueba de concepto (PoC)** con fines educativos y de investigación en seguridad. El uso indebido de esta herramienta es responsabilidad exclusiva del usuario.
 # KICK Viewer Bot UI
+# KICK Viewer Bot UI - Vercel Ready
