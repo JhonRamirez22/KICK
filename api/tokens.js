@@ -13,24 +13,8 @@ export default async function handler(req, res) {
     for (let i = 0; i < parseInt(count); i++) {
       try {
         // Step 1: Session via channel page (exact Python logic)
-        const sessionRes = await fetch(`https://kick.com/${channel}`, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Upgrade-Insecure-Requests': '1'
-          }
-        });
-
-        const cookies = sessionRes.headers.get('set-cookie') || '';
+        // Skip session - direct token attempt (matches Python single_token)
+        const cookies = '';
 
         // Step 2: Token endpoint (chrome131 headers)
         const tokenRes = await fetch('https://websockets.kick.com/viewer/v1/token', {
@@ -38,20 +22,11 @@ export default async function handler(req, res) {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
             'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Sec-Ch-Ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
             'Origin': 'https://kick.com',
             'Referer': `https://kick.com/${channel}`,
             'X-Client-Token': CLIENT_TOKEN,
             'X-Device-ID': crypto.randomUUID(),
-            'X-Session-ID': crypto.randomUUID(),
-            'Cookie': cookies
+            'X-Session-ID': crypto.randomUUID()
           }
         });
 
