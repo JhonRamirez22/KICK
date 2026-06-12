@@ -20,7 +20,6 @@ env:
   STREAM_URL: ${{ github.event.inputs.stream || 'https://kick.com/canal' }}
   VIEWERS: ${{ github.event.inputs.viewers || '50' }}
   DURATION: ${{ github.event.inputs.duration || '60' }}
-  CLIENT_TOKEN: ${{ secrets.CLIENT_TOKEN || 'e1393935a959b4020a4491574f6490129f678acdaa92760471263db43487f823' }}
 
 jobs:
   run-bot:
@@ -40,13 +39,13 @@ jobs:
           pip install -q fastapi uvicorn curl-cffi
           npm install ws --silent
 
-      - name: Esperar Tor (necesita ~30s para bootstrap)
+      - name: Esperar Tor
         run: |
           sudo systemctl start tor
-          echo "Esperando que Tor establezca circuitos..."
+          echo "Esperando Tor..."
           for i in $(seq 1 30); do
             if curl -s --socks5 127.0.0.1:9050 --max-time 5 https://check.torproject.org 2>/dev/null | grep -q "Congratulations"; then
-              echo "✅ Tor listo después de ${i}s"
+              echo "Tor listo despues de ${i}s"
               break
             fi
             sleep 1
@@ -58,31 +57,6 @@ jobs:
           python token_server_vps.py &
           sleep 8
           curl -s http://127.0.0.1:8765/health && echo ""
-
-      - name: Probar token via Tor
-        run: |
-          # Test rapido para ver si Tor + Kick funciona
-          python3 -c "
-import json, uuid
-from curl_cffi import requests as r
-proxy = {'http': 'socks5://127.0.0.1:9050', 'https': 'socks5://127.0.0.1:9050'}
-s = r.Session(impersonate='chrome131', proxies=proxy)
-try:
-    s.get('https://kick.com/lasapaaaaa', headers={'User-Agent': 'Mozilla/5.0 Chrome/131'}, timeout=60)
-    res = s.get('https://websockets.kick.com/viewer/v1/token', headers={
-        'User-Agent': 'Mozilla/5.0 Chrome/131', 'Accept': 'application/json',
-        'Origin': 'https://kick.com', 'Referer': 'https://kick.com/lasapaaaaa',
-        'X-CLIENT-TOKEN': '$CLIENT_TOKEN',
-        'X-Device-ID': str(uuid.uuid4()), 'X-Session-ID': str(uuid.uuid4())}, timeout=60)
-    print(f'Status: {res.status_code}')
-    if res.status_code == 200:
-        t = res.json().get('data', {}).get('token', '')
-        print(f'Token: {t[:30]}...' if t else 'Token vacio')
-    else:
-        print(res.text[:200])
-except Exception as e:
-    print(f'Error: {str(e)[:100]}')
-"
 
       - name: Ejecutar bot
         run: |
