@@ -20,6 +20,7 @@ env:
   STREAM_URL: ${{ github.event.inputs.stream || 'https://kick.com/canal' }}
   VIEWERS: ${{ github.event.inputs.viewers || '50' }}
   DURATION: ${{ github.event.inputs.duration || '60' }}
+  CLIENT_TOKEN: ${{ secrets.CLIENT_TOKEN || 'e1393935a959b4020a4491574f6490129f678acdaa92760471263db43487f823' }}
 
 jobs:
   run-bot:
@@ -37,18 +38,32 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar dependencias
+      - name: Instalar Tor + dependencias
         run: |
+          sudo apt update -qq
+          sudo apt install -y -qq tor
+          sudo systemctl start tor
+          sleep 5
           pip install fastapi uvicorn curl-cffi
           npm install ws
 
-      - name: Iniciar Token Server
+      - name: Probar conexiones
+        run: |
+          echo "=== IP real ==="
+          curl -s --max-time 10 https://ifconfig.me || echo "timeout"
+          echo ""
+          echo "=== IP via Tor ==="
+          curl -s --socks5 127.0.0.1:9050 --max-time 30 https://ifconfig.me || echo "timeout"
+          echo ""
+          echo "=== DNS Kick ==="
+          nslookup kick.com 2>/dev/null | head -5 || echo "no dns"
+
+      - name: Iniciar Token Server (intenta directo, fallback Tor)
         run: |
           python token_server_vps.py &
-          sleep 3
-          curl -s http://127.0.0.1:8765/health
+          sleep 4
+          curl -s http://127.0.0.1:8765/health && echo ""
 
       - name: Ejecutar bot
         run: |
-          echo "Stream: $STREAM_URL | Viewers: $VIEWERS | Duración: $DURATION min"
           timeout $((DURATION * 60)) node kick-websocket-v14-tor.js "$STREAM_URL" "$VIEWERS" || true
