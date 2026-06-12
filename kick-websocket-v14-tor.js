@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
- * Kick Viewer Bot v14.0 — Tor Edition
+ * Kick Viewer Bot v14.0 — API Server Edition
  * ═══════════════════════════════════════════════════════════════
- * Igual que el original pero obtiene tokens via API Server
- * que usa Tor SOCKS5 proxy. Corre en VPS con IPs rotativas.
+ * Obtiene tokens via Token Server API (que usa Tor SOCKS5 proxy).
  *
  * USO: node kick-websocket-v14-tor.js "https://kick.com/canal" [viewers]
  * REQ: npm install ws  &&  python3 token_server_vps.py
@@ -243,8 +242,8 @@ class KickViewerBot {
     async start() {
         console.clear();
         console.log('\n╔══════════════════════════════════════════════════════════╗');
-        console.log('║   KICK VIEWER BOT v14.0 — Tor Edition                  ║');
-        console.log('║   Tokens via API Server → SOCKS5 Tor proxy              ║');
+        console.log('║   KICK VIEWER BOT v14.0 — Tor + API Server             ║');
+        console.log('║   Tokens via Token Server → SOCKS5 Tor proxy            ║');
         console.log('╚══════════════════════════════════════════════════════════╝\n');
         console.log(`  Stream   : ${this.streamName}`);
         console.log(`  Viewers  : ${this.viewerCount}`);
