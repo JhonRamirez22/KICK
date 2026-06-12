@@ -15,8 +15,6 @@ on:
         description: 'Minutos a correr (max 360 = 6h)'
         required: true
         default: '60'
-  schedule:
-    - cron: '0 */4 * * *'
 
 env:
   STREAM_URL: ${{ github.event.inputs.stream || 'https://kick.com/canal' }}
@@ -29,71 +27,28 @@ jobs:
     timeout-minutes: 370
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Instalar Tor + dependencias
+      - name: Instalar dependencias
         run: |
-          sudo apt update -qq
-          sudo apt install -y -qq tor netcat-openbsd
+          pip install fastapi uvicorn curl-cffi
+          npm install ws
 
-          # Configurar Tor con rotación rápida
-          sudo tee -a /etc/tor/torrc > /dev/null << 'EOF'
-          SOCKSPort 9050
-          SOCKSPolicy accept 127.0.0.1
-          ControlPort 9051
-          MaxCircuitDirtiness 30 seconds
-          NewCircuitPeriod 30 seconds
-          EOF
-
-          sudo systemctl restart tor
-          sleep 5
-
-      - name: Instalar Python deps
-        run: pip install fastapi uvicorn curl-cffi
-
-      - name: Instalar Node deps
-        run: npm install ws
-
-      - name: Iniciar Token Server (Tor proxy)
+      - name: Iniciar Token Server
         run: |
           python token_server_vps.py &
           sleep 3
-          echo "Token Server iniciado"
-
-      - name: Probar Tor
-        run: |
-          TOR_IP=$(curl -s --socks5 127.0.0.1:9050 --max-time 15 https://ifconfig.me 2>/dev/null)
-          echo "IP via Tor: $TOR_IP"
+          curl -s http://127.0.0.1:8765/health
 
       - name: Ejecutar bot
         run: |
-          # Rotar Tor periódicamente en background
-          (
-            while true; do
-              sleep 180  # cada 3 min
-              echo -e "AUTHENTICATE \"kickbot2024\"\r\nSIGNAL NEWNYM\r\n" | nc -w 1 127.0.0.1 9051 2>/dev/null
-              echo "[$(date +%H:%M:%S)] IP rotada"
-            done
-          ) &
-
-          # Iniciar bot con timeout
-          echo "Iniciando bot: $STREAM_URL con $VIEWERS viewers por $DURATION min"
+          echo "Stream: $STREAM_URL | Viewers: $VIEWERS | Duración: $DURATION min"
           timeout $((DURATION * 60)) node kick-websocket-v14-tor.js "$STREAM_URL" "$VIEWERS" || true
-
-      - name: Resumen
-        if: always()
-        run: |
-          echo "Ejecución finalizada"
-          echo "Stream: $STREAM_URL"
-          echo "Duración: $DURATION minutos"
